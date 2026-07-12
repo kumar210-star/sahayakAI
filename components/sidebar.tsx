@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
+import { useAuth } from "@/context/auth-context";
 import {
   LayoutDashboard,
   Bot,
@@ -36,6 +37,7 @@ export default function Sidebar({
 }: SidebarProps) {
   const pathname = usePathname();
   const router = useRouter();
+  const { logout } = useAuth();
   const [currentLang, setCurrentLang] = useState("English");
   const [isLangOpen, setIsLangOpen] = useState(false);
 
@@ -72,8 +74,9 @@ export default function Sidebar({
     { name: "Settings", href: "/settings", icon: Settings },
   ];
 
-  const handleLogout = () => {
-    router.push("/");
+  const handleLogout = async () => {
+    await logout();
+    router.push("/login");
   };
 
   const sidebarContent = (

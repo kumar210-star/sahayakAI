@@ -7,6 +7,7 @@ import { motion, LazyMotion, domAnimation } from "framer-motion";
 import { Eye, EyeOff, Loader2 } from "lucide-react";
 import AuthLayout from "@/components/auth/auth-layout";
 import SocialButtons from "@/components/auth/social-buttons";
+import { signIn } from "@/lib/supabase/auth";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -15,6 +16,7 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [authError, setAuthError] = useState("");
 
   // Error validations states
   const [emailError, setEmailError] = useState("");
@@ -26,7 +28,7 @@ export default function LoginPage() {
     shake: { x: [0, -10, 10, -10, 10, 0], transition: { duration: 0.4 } },
   };
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     let valid = true;
 
@@ -57,11 +59,14 @@ export default function LoginPage() {
 
     if (valid) {
       setIsLoading(true);
-      // Simulate authenticating check before dashboard entry
-      setTimeout(() => {
-        setIsLoading(false);
+      setAuthError("");
+      const { error } = await signIn(email, password);
+      setIsLoading(false);
+      if (error) {
+        setAuthError("Invalid email or password. Please try again.");
+      } else {
         router.push("/dashboard");
-      }, 1200);
+      }
     }
   };
 
@@ -73,6 +78,13 @@ export default function LoginPage() {
       >
         <form onSubmit={handleLogin} className="space-y-4 w-full text-left" noValidate>
           
+          {/* Auth Error Banner */}
+          {authError && (
+            <div className="rounded-lg bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-800 px-4 py-3 text-sm text-red-700 dark:text-red-400">
+              {authError}
+            </div>
+          )}
+
           {/* Email input field */}
           <div className="space-y-1">
             <label htmlFor="email" className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">

@@ -5,6 +5,7 @@ import Link from "next/link";
 import { motion, LazyMotion, domAnimation } from "framer-motion";
 import { Loader2, MailCheck, ShieldAlert } from "lucide-react";
 import AuthLayout from "@/components/auth/auth-layout";
+import { resetPassword } from "@/lib/supabase/auth";
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState("");
@@ -17,7 +18,7 @@ export default function ForgotPasswordPage() {
     shake: { x: [0, -10, 10, -10, 10, 0], transition: { duration: 0.4 } },
   };
 
-  const handleResetRequest = (e: React.FormEvent) => {
+  const handleResetRequest = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (!email) {
@@ -35,12 +36,9 @@ export default function ForgotPasswordPage() {
 
     setEmailError("");
     setIsLoading(true);
-
-    // Simulate sending recovery link
-    setTimeout(() => {
-      setIsLoading(false);
-      setIsSubmitted(true);
-    }, 1200);
+    await resetPassword(email);
+    setIsLoading(false);
+    setIsSubmitted(true);
   };
 
   return (

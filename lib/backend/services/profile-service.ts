@@ -1,4 +1,5 @@
-import { ProfileRepository, ProfileEntity } from "../repositories/profile-repo";
+import { Profile } from "@/lib/supabase/types";
+import { ProfileRepository } from "../repositories/profile-repo";
 import { NotFoundError } from "../errors/app-error";
 
 export class ProfileService {
@@ -8,16 +9,19 @@ export class ProfileService {
     this.profileRepo = new ProfileRepository();
   }
 
-  async getUserProfile(userId: string): Promise<ProfileEntity> {
+  async getUserProfile(userId: string): Promise<Profile> {
     const profile = await this.profileRepo.findByUserId(userId);
     if (!profile) {
-      throw new NotFoundError("Profile matching user id not found.");
+      throw new NotFoundError("Profile not found for this user.");
     }
     return profile;
   }
 
-  async updateProfile(userId: string, data: Partial<ProfileEntity>): Promise<ProfileEntity> {
-    // Business rule checks can be added here
+  async updateProfile(userId: string, data: Partial<Profile>): Promise<Profile> {
     return this.profileRepo.update(userId, data);
+  }
+
+  async upsertProfile(data: Partial<Profile> & { id: string }): Promise<Profile> {
+    return this.profileRepo.upsert(data);
   }
 }

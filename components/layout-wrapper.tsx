@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { Menu, Compass } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Sidebar from "@/components/sidebar";
+import { useAuth } from "@/context/auth-context";
 
 export default function LayoutWrapper({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -23,7 +24,20 @@ export default function LayoutWrapper({ children }: { children: React.ReactNode 
     "/settings",
   ];
 
+  const { loading } = useAuth();
   const isAuthRoute = authRoutes.some((route) => pathname.startsWith(route));
+
+  // Show a loading screen while session is being resolved on protected routes
+  if (loading && isAuthRoute) {
+    return (
+      <div className="flex h-screen w-full items-center justify-center bg-gray-50 dark:bg-slate-950">
+        <div className="flex flex-col items-center gap-3">
+          <div className="w-8 h-8 rounded-full border-2 border-blue-600 border-t-transparent animate-spin" />
+          <p className="text-sm text-gray-500 dark:text-gray-400">Loading...</p>
+        </div>
+      </div>
+    );
+  }
 
   // Determine current page title for mobile header display
   const getMobileTitle = () => {

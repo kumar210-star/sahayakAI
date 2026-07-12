@@ -1,4 +1,5 @@
-import { SchemeRepository, SchemeEntity } from "../repositories/scheme-repo";
+import { GovernmentScheme } from "@/lib/supabase/types";
+import { SchemeRepository } from "../repositories/scheme-repo";
 
 export class SchemeService {
   private schemeRepo: SchemeRepository;
@@ -7,26 +8,17 @@ export class SchemeService {
     this.schemeRepo = new SchemeRepository();
   }
 
-  async getAllAvailableSchemes(): Promise<SchemeEntity[]> {
+  async getAllAvailableSchemes(): Promise<GovernmentScheme[]> {
     return this.schemeRepo.findAll();
   }
 
-  async getRecommendedSchemes(profileIncome: string, categoryFilter = "all"): Promise<SchemeEntity[]> {
-    const all = await this.schemeRepo.findAll();
-    
-    // Simple mock eligibility matching scoring logic:
-    return all
-      .filter((s) => categoryFilter === "all" || s.category.toLowerCase() === categoryFilter.toLowerCase())
-      .map((s) => {
-        // Dynamic scoring rule matches
-        let score = s.eligibilityScore;
-        if (profileIncome.includes("₹18L") && s.id === "rec-pmawy") {
-          score = 45; // lower match for high income
-        }
-        return {
-          ...s,
-          eligibilityScore: score,
-        };
-      });
+  async getRecommendedSchemes(
+    income: string,
+    categoryFilter = "all"
+  ): Promise<GovernmentScheme[]> {
+    if (categoryFilter !== "all") {
+      return this.schemeRepo.findByCategory(categoryFilter);
+    }
+    return this.schemeRepo.findAll();
   }
 }

@@ -3,6 +3,7 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 import LayoutWrapper from "@/components/layout-wrapper";
 import OfflineToast from "@/components/ui/offline-toast";
+import { AuthProvider } from "@/context/auth-context";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -25,10 +26,12 @@ export default function RootLayout({
         className={`${inter.variable} font-sans antialiased`}
         suppressHydrationWarning
       >
-        <LayoutWrapper>
-          {children}
-        </LayoutWrapper>
-        <OfflineToast />
+        <AuthProvider>
+          <LayoutWrapper>
+            {children}
+          </LayoutWrapper>
+          <OfflineToast />
+        </AuthProvider>
       </body>
     </html>
   );

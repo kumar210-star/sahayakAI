@@ -1,4 +1,4 @@
-import { SchemeEntity } from "../repositories/scheme-repo";
+import { GovernmentScheme } from "@/lib/supabase/types";
 
 export class AiService {
   private apiKey: string;
@@ -15,7 +15,7 @@ export class AiService {
    */
   async generateGuidedRecommendations(
     profileSummary: string,
-    availableSchemes: SchemeEntity[]
+    availableSchemes: GovernmentScheme[]
   ): Promise<string> {
     if (!this.apiKey || this.apiKey === "mock_google_gemini_api_key_placeholder") {
       // Return simulated AI evaluation payload

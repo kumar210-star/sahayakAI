@@ -2,20 +2,21 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { motion, LazyMotion, domAnimation } from "framer-motion";
 import { Eye, EyeOff, Loader2, ShieldCheck } from "lucide-react";
 import AuthLayout from "@/components/auth/auth-layout";
 import SocialButtons from "@/components/auth/social-buttons";
+import { signUp } from "@/lib/supabase/auth";
 
 export default function RegisterPage() {
-  const router = useRouter();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [agreeTerms, setAgreeTerms] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [authError, setAuthError] = useState("");
+  const [successMessage, setSuccessMessage] = useState("");
 
   // Errors validation
   const [nameError, setNameError] = useState("");
@@ -32,7 +33,7 @@ export default function RegisterPage() {
     shake: { x: [0, -10, 10, -10, 10, 0], transition: { duration: 0.4 } },
   };
 
-  const handleRegister = (e: React.FormEvent) => {
+  const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     let valid = true;
 
@@ -88,11 +89,14 @@ export default function RegisterPage() {
 
     if (valid) {
       setIsLoading(true);
-      // Simulate account registration delay
-      setTimeout(() => {
-        setIsLoading(false);
-        router.push("/dashboard");
-      }, 1200);
+      setAuthError("");
+      const { error } = await signUp(email, password, name);
+      setIsLoading(false);
+      if (error) {
+        setAuthError(error.message || "Registration failed. Please try again.");
+      } else {
+        setSuccessMessage("Account created! Please check your email to verify your account before logging in.");
+      }
     }
   };
 
@@ -104,6 +108,20 @@ export default function RegisterPage() {
       >
         <form onSubmit={handleRegister} className="space-y-4 w-full text-left" noValidate>
           
+          {/* Success Banner */}
+          {successMessage && (
+            <div className="rounded-lg bg-green-50 dark:bg-green-950/40 border border-green-200 dark:border-green-800 px-4 py-3 text-sm text-green-700 dark:text-green-400">
+              {successMessage}
+            </div>
+          )}
+
+          {/* Auth Error Banner */}
+          {authError && (
+            <div className="rounded-lg bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-800 px-4 py-3 text-sm text-red-700 dark:text-red-400">
+              {authError}
+            </div>
+          )}
+
           {/* Full Name field */}
           <div className="space-y-1">
             <label htmlFor="name" className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">

@@ -5,6 +5,7 @@ import Link from "next/link";
 import { motion, LazyMotion, domAnimation } from "framer-motion";
 import { Eye, EyeOff, Loader2, KeyRound } from "lucide-react";
 import AuthLayout from "@/components/auth/auth-layout";
+import { updatePassword } from "@/lib/supabase/auth";
 
 export default function ResetPasswordPage() {
   const [password, setPassword] = useState("");
@@ -16,6 +17,7 @@ export default function ResetPasswordPage() {
   // Errors validation
   const [passwordError, setPasswordError] = useState("");
   const [confirmError, setConfirmError] = useState("");
+  const [authError, setAuthError] = useState("");
   const [shakePassword, setShakePassword] = useState(false);
   const [shakeConfirm, setShakeConfirm] = useState(false);
 
@@ -23,7 +25,7 @@ export default function ResetPasswordPage() {
     shake: { x: [0, -10, 10, -10, 10, 0], transition: { duration: 0.4 } },
   };
 
-  const handleResetSubmit = (e: React.FormEvent) => {
+  const handleResetSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     let valid = true;
 
@@ -59,11 +61,14 @@ export default function ResetPasswordPage() {
 
     if (valid) {
       setIsLoading(true);
-      // Simulate saving new password
-      setTimeout(() => {
-        setIsLoading(false);
+      setAuthError("");
+      const { error } = await updatePassword(password);
+      setIsLoading(false);
+      if (error) {
+        setAuthError("Failed to update password. Your reset link may have expired. Please request a new one.");
+      } else {
         setIsSuccess(true);
-      }, 1200);
+      }
     }
   };
 
@@ -81,6 +86,13 @@ export default function ResetPasswordPage() {
           /* Form for new password setup */
           <form onSubmit={handleResetSubmit} className="space-y-4 w-full text-left" noValidate>
             
+            {/* Auth Error Banner */}
+            {authError && (
+              <div className="rounded-lg bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-800 px-4 py-3 text-sm text-red-700 dark:text-red-400">
+                {authError}
+              </div>
+            )}
+
             {/* New Password input */}
             <div className="space-y-1">
               <label htmlFor="password" className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
