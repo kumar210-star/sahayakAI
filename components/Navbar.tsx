@@ -64,6 +64,11 @@ export default function Navbar() {
     { name: "Eligibility Checker", href: "/eligibility" },
     { name: "AI Assistant", href: "/assistant" },
     { name: "Dashboard", href: "/dashboard" },
+    { name: "Tracker", href: "/tracker" },
+    { name: "Saved Schemes", href: "/saved" },
+    { name: "Notifications", href: "/notifications" },
+    { name: "Profile", href: "/profile" },
+    { name: "Settings", href: "/settings" },
   ];
 
   return (
