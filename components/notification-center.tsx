@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { motion, LazyMotion, domAnimation, AnimatePresence, type Variants } from "framer-motion";
 import {
+  Search,
   Sparkles,
   Award,
   TrendingUp,
@@ -11,75 +12,76 @@ import {
   FileText,
   Megaphone,
   CheckCheck,
-  Search,
   Trash2,
   Inbox,
   ArrowRight,
 } from "lucide-react";
 import { NotificationItem } from "@/types/notifications";
+import EmptyState from "./ui/empty-state";
+import { SkeletonCard } from "./ui/skeleton";
 
 /* ─────────────────────────────────────────────
-   Initial mock notifications list
+   Mock Notifications Feed Presets
 ───────────────────────────────────────────── */
 
 const initialNotifications: NotificationItem[] = [
   {
     id: "notif-1",
-    title: "New AI Scheme Match Recommendation",
-    message: "Based on your updated profile (Farmer, Maharashtra), you are 92% match eligible for PM-Kisan Samman Nidhi.",
     category: "recommendation",
-    timestamp: "10 mins ago",
-    isRead: false,
-    actionUrl: "/dashboard",
-  },
-  {
-    id: "notif-2",
-    title: "Application Status Advanced",
-    message: "Your application for PM Awas Yojana (Urban) has passed 'Documents Verified' and is now under Officer Review.",
-    category: "status",
+    title: "New AI Recommendation",
+    message: "Based on your updated annual income profile and student status, you qualify for the Post-Matric Scholarship Scheme. Click to review qualifications.",
     timestamp: "2 hours ago",
     isRead: false,
-    actionUrl: "/dashboard",
-  },
-  {
-    id: "notif-3",
-    title: "Document Upload Pending",
-    message: "Action Required: Please upload your Income Certificate and Land Ownership records to complete PM-Kisan eligibility checks.",
-    category: "document",
-    timestamp: "1 day ago",
-    isRead: false,
-    actionUrl: "/profile",
-  },
-  {
-    id: "notif-4",
-    title: "New Scheme Launched: Lakhpati Didi",
-    message: "Central Government has launched a new support scheme for self-employed women with up to ₹1L financial assistance.",
-    category: "scheme",
-    timestamp: "2 days ago",
-    isRead: true,
     actionUrl: "/eligibility",
   },
   {
-    id: "notif-5",
-    title: "Upcoming Deadline Alert",
-    message: "The application period for Post-Matric Scholarship Scheme closes in 5 days (July 17, 2026). Submit soon!",
-    category: "deadline",
+    id: "notif-2",
+    category: "scheme",
+    title: "New Government Scheme Launched",
+    message: "Central Government introduces 'PM Surya Ghar: Muft Bijli Yojana' providing up to ₹78,000 subsidy for residential rooftop solar installations.",
+    timestamp: "1 day ago",
+    isRead: false,
+    actionUrl: "/saved",
+  },
+  {
+    id: "notif-3",
+    category: "status",
+    title: "Application Status Updated",
+    message: "Your application for PM Awas Yojana (Urban) has passed state nodal verification. Assigned local site inspector for field verification.",
     timestamp: "3 days ago",
     isRead: true,
-    actionUrl: "/dashboard",
+    actionUrl: "/tracker",
+  },
+  {
+    id: "notif-4",
+    category: "deadline",
+    title: "Upcoming Application Deadline",
+    message: "Warning: Submission window for Post-Matric Scholarship Scheme closes on August 15, 2026. Complete your draft forms to secure grants.",
+    timestamp: "5 days ago",
+    isRead: false,
+    actionUrl: "/tracker",
+  },
+  {
+    id: "notif-5",
+    category: "document",
+    title: "Document Re-upload Required",
+    message: "SC/ST/OBC certificate uploaded for Post-Matric Scholarship contains low resolution or illegible seals. Please re-upload in settings.",
+    timestamp: "1 week ago",
+    isRead: true,
+    actionUrl: "/profile",
   },
   {
     id: "notif-6",
-    title: "Scheduled Maintenance Announcement",
-    message: "SahayakAI portal will undergo a brief 10-minute database speed optimization on Sunday at 02:00 AM IST.",
     category: "announcement",
-    timestamp: "5 days ago",
+    title: "Service Maintenance Announcement",
+    message: "SahayakAI portal will undergo planned maintenance on July 18, 2026, from 02:00 AM to 05:00 AM IST. Offline mode will be active.",
+    timestamp: "1 week ago",
     isRead: true,
   },
 ];
 
 /* ─────────────────────────────────────────────
-   Framer Motion Configurations
+   Framer Motion Variants
 ───────────────────────────────────────────── */
 
 const listVariants: Variants = {
@@ -91,22 +93,14 @@ const listVariants: Variants = {
 };
 
 const itemVariants: Variants = {
-  hidden: { opacity: 0, y: 15 },
-  visible: {
-    opacity: 1,
-    y: 0,
-    transition: { duration: 0.4, ease: "easeOut" },
-  },
-  exit: {
-    opacity: 0,
-    x: -25,
-    transition: { duration: 0.25 },
-  },
+  hidden: { opacity: 0, scale: 0.96, y: 15 },
+  visible: { opacity: 1, scale: 1, y: 0, transition: { duration: 0.4, ease: "easeOut" } },
+  exit: { opacity: 0, scale: 0.95, y: -10, transition: { duration: 0.25 } },
 };
 
 const countVariants: Variants = {
-  hidden: { scale: 0.8, opacity: 0 },
-  visible: { scale: 1, opacity: 1, transition: { type: "spring", stiffness: 400, damping: 15 } },
+  hidden: { scale: 0 },
+  visible: { scale: 1, transition: { type: "spring", stiffness: 500, damping: 20 } },
 };
 
 /* ─────────────────────────────────────────────
@@ -116,7 +110,7 @@ const countVariants: Variants = {
 export default function NotificationCenter() {
   const [notifications, setNotifications] = useState<NotificationItem[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedFilter, setSelectedFilter] = useState<string>("all");
+  const [selectedFilter, setSelectedFilter] = useState("all");
   const [isLoading, setIsLoading] = useState(true);
 
   // Simulate loader mount
@@ -128,15 +122,15 @@ export default function NotificationCenter() {
     return () => clearTimeout(timer);
   }, []);
 
-  const handleMarkAsRead = (id: string) => {
-    setNotifications((prev) =>
-      prev.map((n) => (n.id === id ? { ...n, isRead: true } : n))
-    );
-  };
-
   const handleToggleRead = (id: string) => {
     setNotifications((prev) =>
       prev.map((n) => (n.id === id ? { ...n, isRead: !n.isRead } : n))
+    );
+  };
+
+  const handleMarkAsRead = (id: string) => {
+    setNotifications((prev) =>
+      prev.map((n) => (n.id === id ? { ...n, isRead: true } : n))
     );
   };
 
@@ -207,11 +201,12 @@ export default function NotificationCenter() {
           <button
             onClick={handleMarkAllRead}
             disabled={unreadCount === 0 || isLoading}
-            className={`px-5 py-2.5 rounded-xl text-xs font-semibold flex items-center justify-center gap-1.5 transition-all ${
+            className={`px-5 py-2.5 rounded-xl text-xs font-semibold flex items-center justify-center gap-1.5 transition-all focus:outline-none focus:ring-2 focus:ring-[#2563EB] ${
               unreadCount === 0
                 ? "border border-gray-200 text-gray-300 cursor-not-allowed"
-                : "border border-blue-200 text-[#2563EB] hover:bg-blue-50/40 cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#2563EB]"
+                : "border border-blue-200 text-[#2563EB] hover:bg-blue-50/40 cursor-pointer"
             }`}
+            aria-label="Mark all notifications as read"
           >
             <CheckCheck className="w-4.5 h-4.5" />
             Mark All as Read
@@ -231,7 +226,7 @@ export default function NotificationCenter() {
                 role="tab"
                 aria-selected={isActive}
                 onClick={() => setSelectedFilter(cat.id)}
-                className={`px-4 py-2.5 rounded-full text-xs font-semibold tracking-wide shrink-0 transition-all flex items-center gap-2 cursor-pointer ${
+                className={`px-4 py-2.5 rounded-full text-xs font-semibold tracking-wide shrink-0 transition-all flex items-center gap-2 cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#2563EB] ${
                   isActive
                     ? "bg-[#2563EB] text-white font-bold"
                     : "bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-800 text-gray-600 dark:text-gray-400 hover:border-gray-300"
@@ -253,50 +248,36 @@ export default function NotificationCenter() {
         {/* ── NOTIFICATIONS MAIN FEED PANEL ── */}
         <div className="space-y-4" role="log" aria-live="polite">
           {isLoading ? (
-            /* Loading Shimmer Skeletons */
+            /* Loading Shimmer Skeletons using Reusable components */
             <div className="space-y-3">
-              {[1, 2, 3].map((idx) => (
-                <div
-                  key={idx}
-                  className="brand-card p-5 border border-gray-100 dark:border-slate-800/80 bg-white dark:bg-slate-900 flex gap-4 animate-pulse"
-                >
-                  <div className="w-10 h-10 rounded-full bg-gray-100 dark:bg-slate-800 shrink-0" />
-                  <div className="flex-1 space-y-2">
-                    <div className="h-4 bg-gray-100 dark:bg-slate-800 rounded w-1/3" />
-                    <div className="h-3 bg-gray-100 dark:bg-slate-800 rounded w-5/6" />
-                    <div className="h-3 bg-gray-100 dark:bg-slate-800 rounded w-1/4" />
-                  </div>
-                </div>
-              ))}
+              <SkeletonCard />
+              <SkeletonCard />
+              <SkeletonCard />
             </div>
           ) : filtered.length === 0 ? (
-            /* Empty State Panel */
-            <div className="brand-card py-16 px-6 border border-gray-100 dark:border-slate-800/80 bg-white dark:bg-slate-900 flex flex-col items-center justify-center text-center space-y-4">
-              <div className="w-16 h-16 rounded-full bg-blue-50 dark:bg-slate-850 text-blue-500 flex items-center justify-center" aria-hidden="true">
-                <Inbox className="w-8 h-8" />
-              </div>
-              <div className="space-y-1">
-                <h3 className="text-base font-extrabold text-[#0F172A] dark:text-white">
-                  No notifications found
-                </h3>
-                <p className="text-xs text-gray-500 dark:text-gray-400 max-w-sm">
-                  {searchQuery || selectedFilter !== "all"
-                    ? "Try adjusting your search terms or selecting a different category filter above."
-                    : "You are all caught up! Check back later for matching schemes and updates."}
-                </p>
-              </div>
-              {(searchQuery || selectedFilter !== "all") && (
-                <button
-                  onClick={() => {
-                    setSearchQuery("");
-                    setSelectedFilter("all");
-                  }}
-                  className="px-4 py-2 border border-blue-200 text-[#2563EB] hover:bg-blue-50/30 text-xs font-semibold rounded-xl transition-all"
-                >
-                  Reset filters
-                </button>
-              )}
-            </div>
+            /* Empty State using Reusable components */
+            <EmptyState
+              icon={Inbox}
+              title="No notifications found"
+              description={
+                searchQuery || selectedFilter !== "all"
+                  ? "Try adjusting your search terms or selecting a different category filter above."
+                  : "You are all caught up! Check back later for matching schemes and updates."
+              }
+              action={
+                (searchQuery || selectedFilter !== "all") ? (
+                  <button
+                    onClick={() => {
+                      setSearchQuery("");
+                      setSelectedFilter("all");
+                    }}
+                    className="px-4 py-2 border border-blue-200 text-[#2563EB] hover:bg-blue-50/30 text-xs font-semibold rounded-xl transition-all cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#2563EB]"
+                  >
+                    Reset filters
+                  </button>
+                ) : undefined
+              }
+            />
           ) : (
             /* Main List */
             <motion.div
@@ -355,7 +336,7 @@ export default function NotificationCenter() {
                             <Link
                               href={item.actionUrl}
                               onClick={() => handleMarkAsRead(item.id)}
-                              className="text-[10px] font-bold text-[#2563EB] hover:text-blue-700 flex items-center gap-1 group"
+                              className="text-[10px] font-bold text-[#2563EB] hover:text-blue-700 flex items-center gap-1 group focus:outline-none focus:ring-2 focus:ring-[#2563EB]"
                             >
                               Take Action
                               <ArrowRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-0.5" />
@@ -368,14 +349,15 @@ export default function NotificationCenter() {
                             <button
                               type="button"
                               onClick={() => handleToggleRead(item.id)}
-                              className="px-2.5 py-1.5 rounded-lg border border-gray-200 dark:border-slate-800 text-[9px] font-bold text-gray-500 hover:bg-gray-50 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+                              className="px-2.5 py-1.5 rounded-lg border border-gray-200 dark:border-slate-800 text-[9px] font-bold text-gray-500 hover:bg-gray-50 dark:hover:bg-slate-800 transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-gray-250 dark:focus:ring-offset-slate-900"
+                              aria-label={item.isRead ? "Mark notification as unread" : "Mark notification as read"}
                             >
                               {item.isRead ? "Mark Unread" : "Mark Read"}
                             </button>
                             <button
                               type="button"
                               onClick={() => handleDelete(item.id)}
-                              className="p-1.5 rounded-lg border border-gray-200 dark:border-slate-800 text-gray-400 hover:text-red-500 hover:border-red-200 hover:bg-red-50/20 transition-all cursor-pointer"
+                              className="p-1.5 rounded-lg border border-gray-200 dark:border-slate-800 text-gray-400 hover:text-red-500 hover:border-red-200 hover:bg-red-50/20 transition-all cursor-pointer focus:outline-none focus:ring-2 focus:ring-red-500"
                               aria-label="Delete notification"
                             >
                               <Trash2 className="w-3.5 h-3.5" />

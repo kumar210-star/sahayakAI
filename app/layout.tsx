@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
-import Navbar from "@/components/Navbar";
+import LayoutWrapper from "@/components/layout-wrapper";
 import OfflineToast from "@/components/ui/offline-toast";
 
 const inter = Inter({
@@ -25,13 +25,11 @@ export default function RootLayout({
         className={`${inter.variable} font-sans antialiased`}
         suppressHydrationWarning
       >
-        <Navbar />
-        {children}
+        <LayoutWrapper>
+          {children}
+        </LayoutWrapper>
         <OfflineToast />
       </body>
     </html>
   );
 }
-
-
-

@@ -107,6 +107,17 @@ export default function SettingsWorkspace() {
     }
   }, []);
 
+  // Listen for Escape key to close the delete confirmation modal
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        setShowDeleteModal(false);
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, []);
+
   const handleSaveSettings = (updated: Partial<UserSettings>) => {
     const nextSettings = { ...settings, ...updated };
     setSettings(nextSettings);
@@ -275,7 +286,7 @@ export default function SettingsWorkspace() {
                         <button
                           key={t.id}
                           onClick={() => handleSaveSettings({ theme: t.id as "light" | "dark" | "system" })}
-                          className={`flex flex-col items-center gap-2 p-4 border rounded-2xl transition-all focus:outline-none ${
+                          className={`flex flex-col items-center gap-2 p-4 border rounded-2xl transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-[#2563EB] focus-visible:ring-offset-2 ${
                             isSel
                               ? "bg-blue-50/50 dark:bg-slate-800 border-[#2563EB] text-[#2563EB] font-bold"
                               : "bg-white dark:bg-slate-900 border-gray-200 dark:border-slate-800 text-gray-500 hover:border-gray-300"

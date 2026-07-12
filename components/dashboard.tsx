@@ -19,6 +19,7 @@ import {
 } from "lucide-react";
 import { ApplicationStatus, UserNotification, SearchLog, EligibilityLog } from "@/types/dashboard";
 import { SchemeRecommendation } from "@/types/recommendation";
+import EmptyState from "./ui/empty-state";
 
 /* ─────────────────────────────────────────────
    Mock Dashboard Data
@@ -344,9 +345,10 @@ export default function UserDashboard() {
 
               <AnimatePresence mode="popLayout">
                 {savedSchemes.length === 0 ? (
-                  <div className="text-center py-6 text-sm text-gray-400 select-none">
-                    No saved schemes. Add schemes from recommendations list.
-                  </div>
+                  <EmptyState
+                    title="No saved schemes"
+                    description="You haven't bookmarked any schemes. Use the Eligibility Checker to save matches."
+                  />
                 ) : (
                   <div className="space-y-3.5">
                     {savedSchemes.map((scheme) => (
@@ -447,9 +449,10 @@ export default function UserDashboard() {
 
               <AnimatePresence mode="popLayout">
                 {notifications.length === 0 ? (
-                  <div className="text-center py-6 text-xs text-gray-400 select-none">
-                    No new notifications.
-                  </div>
+                  <EmptyState
+                    title="No new alerts"
+                    description="You are completely caught up!"
+                  />
                 ) : (
                   <div className="space-y-3">
                     {notifications.map((notif) => {
@@ -537,9 +540,10 @@ export default function UserDashboard() {
 
               <AnimatePresence mode="popLayout">
                 {searches.length === 0 ? (
-                  <div className="text-center py-4 text-xs text-gray-400 select-none">
-                    No recent searches.
-                  </div>
+                  <EmptyState
+                    title="No recent searches"
+                    description="Your search queries will be cached here."
+                  />
                 ) : (
                   <div className="space-y-2">
                     {searches.map((item) => (

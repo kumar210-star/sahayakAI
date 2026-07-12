@@ -16,6 +16,8 @@ import {
   X,
 } from "lucide-react";
 import { SavedSchemeItem } from "@/types/saved";
+import EmptyState from "./ui/empty-state";
+import { SkeletonCard } from "./ui/skeleton";
 
 /* ─────────────────────────────────────────────
    Mock Bookmarks Database
@@ -141,6 +143,17 @@ export default function SavedSchemes() {
     return () => clearTimeout(timer);
   }, []);
 
+  // Listen for Escape key to close the comparative modal
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        setShowCompareModal(false);
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, []);
+
   const handleRemoveBookmark = (id: string) => {
     setSavedItems((prev) => prev.filter((item) => item.id !== id));
     setComparedIds((prev) => prev.filter((cId) => cId !== id));
@@ -253,7 +266,7 @@ export default function SavedSchemes() {
                   </h3>
                   <button
                     onClick={() => setShowCompareModal(false)}
-                    className="p-1 text-gray-400 hover:text-gray-600 rounded-lg"
+                    className="p-1 text-gray-400 hover:text-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2563EB] cursor-pointer"
                     aria-label="Close Comparison modal"
                   >
                     <X className="w-5 h-5" />
@@ -265,7 +278,7 @@ export default function SavedSchemes() {
                   <table className="w-full text-xs text-left border-collapse">
                     <thead>
                       <tr className="border-b border-gray-150 dark:border-slate-800">
-                        <th className="py-3 px-4 font-bold text-gray-400 uppercase tracking-widest w-1/4">Criteria</th>
+                        <th className="py-3 px-4 font-bold text-gray-500 uppercase tracking-widest w-1/4">Criteria</th>
                         {comparedIds.map((cId) => {
                           const item = savedItems.find((s) => s.id === cId);
                           return (
@@ -333,7 +346,8 @@ export default function SavedSchemes() {
                 <div className="flex justify-end pt-2">
                   <button
                     onClick={() => setShowCompareModal(false)}
-                    className="px-6 py-2.5 bg-[#2563EB] hover:bg-blue-700 text-white text-xs font-semibold rounded-xl transition-all"
+                    className="px-6 py-2.5 bg-[#2563EB] hover:bg-blue-700 text-white text-xs font-semibold rounded-xl transition-all cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#2563EB]"
+                    aria-label="Close comparative modal"
                   >
                     Done Comparison
                   </button>
@@ -386,7 +400,7 @@ export default function SavedSchemes() {
                 role="tab"
                 aria-selected={isActive}
                 onClick={() => setSelectedFilter(cat)}
-                className={`px-4 py-2.5 rounded-full text-xs font-semibold tracking-wide shrink-0 transition-all flex items-center gap-2 cursor-pointer ${
+                className={`px-4 py-2.5 rounded-full text-xs font-semibold tracking-wide shrink-0 transition-all flex items-center gap-2 cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#2563EB] ${
                   isActive
                     ? "bg-[#2563EB] text-white font-bold"
                     : "bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-800 text-gray-600 dark:text-gray-400 hover:border-gray-300"
@@ -408,59 +422,43 @@ export default function SavedSchemes() {
         {/* ── SAVED GRID LIST ── */}
         <div className="w-full">
           {isLoading ? (
-            /* Shimmer loading skeletons */
+            /* Shimmer loading skeletons using reusable components */
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {[1, 2].map((idx) => (
-                <div
-                  key={idx}
-                  className="brand-card p-6 border border-gray-100 dark:border-slate-800 bg-white dark:bg-slate-900 space-y-4 animate-pulse"
-                >
-                  <div className="flex justify-between">
-                    <div className="h-4 bg-gray-100 dark:bg-slate-800 rounded w-1/3" />
-                    <div className="h-6 bg-gray-100 dark:bg-slate-800 rounded w-16" />
-                  </div>
-                  <div className="h-3 bg-gray-100 dark:bg-slate-800 rounded w-5/6" />
-                  <div className="h-3 bg-gray-100 dark:bg-slate-800 rounded w-2/3" />
-                  <div className="h-8 bg-gray-100 dark:bg-slate-800 rounded w-full pt-4" />
-                </div>
-              ))}
+              <SkeletonCard />
+              <SkeletonCard />
             </div>
           ) : sorted.length === 0 ? (
-            /* Empty state placeholder */
-            <div className="brand-card py-16 px-6 border border-gray-150 dark:border-slate-800/80 bg-white dark:bg-slate-900 flex flex-col items-center justify-center text-center space-y-4">
-              <div className="w-16 h-16 rounded-full bg-blue-50 dark:bg-slate-850 text-blue-500 flex items-center justify-center" aria-hidden="true">
-                <Inbox className="w-8 h-8" />
-              </div>
-              <div className="space-y-1">
-                <h3 className="text-base font-extrabold text-[#0F172A] dark:text-white">
-                  No saved schemes found
-                </h3>
-                <p className="text-xs text-gray-500 dark:text-gray-400 max-w-sm">
-                  {searchQuery || selectedFilter !== "all"
-                    ? "Try adjusting your search query keywords or filter tabs to discover bookmarks."
-                    : "You haven't saved any government schemes yet. Explore matches using the Eligibility Checker!"}
-                </p>
-              </div>
-              {searchQuery || selectedFilter !== "all" ? (
-                <button
-                  onClick={() => {
-                    setSearchQuery("");
-                    setSelectedFilter("all");
-                  }}
-                  className="px-4 py-2 border border-blue-200 text-[#2563EB] hover:bg-blue-50/30 text-xs font-semibold rounded-xl transition-all"
-                >
-                  Reset filters
-                </button>
-              ) : (
-                <Link
-                  href="/eligibility"
-                  className="px-5 py-2.5 bg-[#2563EB] hover:bg-blue-700 text-white text-xs font-semibold rounded-xl transition-all shadow-md flex items-center gap-1"
-                >
-                  Check Eligibility Matches
-                  <ArrowRight className="w-4 h-4" />
-                </Link>
-              )}
-            </div>
+            /* Empty state using reusable components */
+            <EmptyState
+              icon={Inbox}
+              title="No saved schemes found"
+              description={
+                searchQuery || selectedFilter !== "all"
+                  ? "Try adjusting your search query keywords or filter tabs to discover bookmarks."
+                  : "You haven't saved any government schemes yet. Explore matches using the Eligibility Checker!"
+              }
+              action={
+                searchQuery || selectedFilter !== "all" ? (
+                  <button
+                    onClick={() => {
+                      setSearchQuery("");
+                      setSelectedFilter("all");
+                    }}
+                    className="px-4 py-2 border border-blue-200 text-[#2563EB] hover:bg-blue-50/30 text-xs font-semibold rounded-xl transition-all cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#2563EB]"
+                  >
+                    Reset filters
+                  </button>
+                ) : (
+                  <Link
+                    href="/eligibility"
+                    className="px-5 py-2.5 bg-[#2563EB] hover:bg-blue-700 text-white text-xs font-semibold rounded-xl transition-all shadow-md flex items-center gap-1.5 focus:outline-none focus:ring-2 focus:ring-[#2563EB]"
+                  >
+                    Check Eligibility Matches
+                    <ArrowRight className="w-4 h-4" />
+                  </Link>
+                )
+              }
+            />
           ) : (
             /* Bookmarks List Grid */
             <motion.div
@@ -550,8 +548,9 @@ export default function SavedSchemes() {
                         <div className="flex items-center gap-1.5 ml-auto">
                           <button
                             onClick={() => toggleExpand(item.id)}
-                            className="p-2 border border-gray-200 dark:border-slate-800 text-gray-400 hover:text-[#2563EB] rounded-lg transition-colors flex items-center gap-1"
+                            className="p-2 border border-gray-200 dark:border-slate-800 text-gray-400 hover:text-[#2563EB] rounded-lg transition-colors flex items-center gap-1 focus:outline-none focus:ring-2 focus:ring-[#2563EB] cursor-pointer"
                             title={isExpanded ? "Hide details" : "View details"}
+                            aria-label={isExpanded ? "Hide details panel" : "View details and requirements"}
                           >
                             <span className="text-[9px] font-bold pr-0.5">Details</span>
                             {isExpanded ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
@@ -559,16 +558,18 @@ export default function SavedSchemes() {
                           
                           <button
                             onClick={() => handleShare(item.id)}
-                            className="p-2 border border-gray-200 dark:border-slate-800 text-gray-400 hover:text-blue-500 rounded-lg transition-colors"
+                            className="p-2 border border-gray-200 dark:border-slate-800 text-gray-400 hover:text-blue-500 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer"
                             title="Share scheme link"
+                            aria-label="Share scheme link"
                           >
                             <Share2 className="w-3.5 h-3.5" />
                           </button>
 
                           <button
                             onClick={() => handleRemoveBookmark(item.id)}
-                            className="p-2 border border-gray-200 dark:border-slate-800 text-gray-400 hover:text-red-500 hover:border-red-200 hover:bg-red-50/20 rounded-lg transition-all"
+                            className="p-2 border border-gray-200 dark:border-slate-800 text-gray-400 hover:text-red-500 hover:border-red-200 hover:bg-red-50/20 rounded-lg transition-all focus:outline-none focus:ring-2 focus:ring-red-500 cursor-pointer"
                             title="Remove bookmark"
+                            aria-label="Remove scheme from saved list"
                           >
                             <Trash2 className="w-3.5 h-3.5" />
                           </button>
@@ -606,18 +607,20 @@ export default function SavedSchemes() {
               <div className="flex gap-2">
                 <button
                   onClick={() => setComparedIds([])}
-                  className="px-3 py-2 border border-slate-700 hover:bg-slate-800 rounded-xl text-[10px] font-bold text-gray-300 transition-colors"
+                  className="px-3 py-2 border border-slate-700 hover:bg-slate-800 rounded-xl text-[10px] font-bold text-gray-300 transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-slate-700"
+                  aria-label="Clear all selected schemes for comparison"
                 >
                   Clear All
                 </button>
                 <button
                   onClick={() => setShowCompareModal(true)}
                   disabled={comparedIds.length < 2}
-                  className={`px-4 py-2 rounded-xl text-[10px] font-bold flex items-center gap-1 transition-all ${
+                  className={`px-4 py-2 rounded-xl text-[10px] font-bold flex items-center gap-1 transition-all focus:outline-none focus:ring-2 focus:ring-[#2563EB] ${
                     comparedIds.length < 2
                       ? "bg-blue-800 text-blue-400 cursor-not-allowed"
                       : "bg-[#2563EB] hover:bg-blue-600 text-white shadow-md shadow-blue-500/10 cursor-pointer"
                   }`}
+                  aria-label="Compare selected schemes side-by-side"
                 >
                   Compare Now
                   <ArrowRight className="w-3 h-3" />
